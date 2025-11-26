@@ -1,6 +1,6 @@
 {
   "name": "迭代解法可视化工具",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "迭代解法可视化工具,杨浩天的数值分析大作业",
   "main": "dist-electron/main.js",
