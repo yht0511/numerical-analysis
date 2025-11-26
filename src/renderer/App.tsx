@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { FlaskConical, Sigma, Zap, Sun, Moon } from "lucide-react";
+import { FlaskConical, Sigma, Sun, Moon } from "lucide-react";
 import RealRootView from "./views/RealRootView";
 import FractalView from "./views/FractalView";
 
 export default function App() {
   const [tab, setTab] = useState<"real" | "fractal">("real");
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const logoUrl = new URL("./assets/logo.svg", import.meta.url).href;
   return (
     <div
       className={`${
@@ -18,8 +19,8 @@ export default function App() {
         }`}
       >
         <div className="flex items-center gap-2">
-          <Zap className="text-emerald-500" />
-          <span className="font-semibold text-lg">迭代解法可视化 by 杨浩天</span>
+          {/* <img src={logoUrl} className="h-5 w-5" alt="" /> */}
+          <span className="font-semibold text-lg">迭代解法可视化工具 by 杨浩天</span>
         </div>
         <nav className="flex gap-2 items-center">
           <button
