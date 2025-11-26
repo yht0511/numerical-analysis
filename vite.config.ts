@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import electron from "vite-plugin-electron/simple";
+import path from "node:path";
 
 export default defineConfig({
   root: "src/renderer",
@@ -19,7 +20,7 @@ export default defineConfig({
     }),
   ],
   build: {
-    outDir: "dist",
+    outDir: path.join(__dirname, "dist"),
   },
   server: {
     port: 5173,
