@@ -3,3 +3,7 @@ node_modules
 dist-electron
 .DS_Store
 release/
+提交/
+*.docx
+report.md
+report.assets/

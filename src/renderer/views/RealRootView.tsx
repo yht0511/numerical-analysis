@@ -406,19 +406,43 @@ export default function RealRootView({ theme }: { theme: "light" | "dark" }) {
           } else if (method === "newton-damped") {
             const fx = evalFx(xn);
             const dfx = evalDx(xn);
-            if (!isFinite(fx) || !isFinite(dfx) || Math.abs(dfx) < 1e-14) {
+            if (!isFinite(fx)) {
+              setIterError("迭代失败：函数或导数数值不稳定");
+              return next;
+            }
+            if (!isFinite(dfx) || Math.abs(dfx) < 1e-14) {
               if (next.length > 0) {
                 const fxn1 = evalFx(xn_1);
                 const denom = fx - fxn1;
                 if (isFinite(fxn1) && Math.abs(denom) > 1e-14) {
-                  const rawCand = xn - (fx * (xn - xn_1)) / denom;
-                  const cand = xn + lambda * (rawCand - xn);
-                  const sm = stableMove(xn, cand);
-                  if (!sm.ok) {
-                    setIterError("迭代失败：函数或导数数值不稳定");
+                  const raw = xn - (fx * (xn - xn_1)) / denom;
+                  const dir = raw - xn;
+                  let step = isFinite(lambda) && lambda > 0 ? lambda : 1;
+                  let tries = 0;
+                  let accepted = false;
+                  let candVal = xn;
+                  while (tries < 20) {
+                    const cand = xn + step * dir;
+                    const sm = stableMove(xn, cand);
+                    if (!sm.ok) {
+                      step *= 0.5;
+                      tries++;
+                      continue;
+                    }
+                    const fnew = evalFx(sm.value);
+                    if (isFinite(fnew) && Math.abs(fnew) < Math.abs(fx)) {
+                      candVal = sm.value;
+                      accepted = true;
+                      break;
+                    }
+                    step *= 0.5;
+                    tries++;
+                  }
+                  if (!accepted) {
+                    setIterError("迭代失败：下山条件无法满足");
                     return next;
                   }
-                  xnp1 = sm.value;
+                  xnp1 = candVal;
                 } else {
                   setIterError("迭代失败：函数或导数数值不稳定");
                   return next;
@@ -429,13 +453,33 @@ export default function RealRootView({ theme }: { theme: "light" | "dark" }) {
               }
             } else {
               const raw = xn - fx / dfx;
-              const cand = xn + lambda * (raw - xn);
-              const sm = stableMove(xn, cand);
-              if (!sm.ok) {
-                setIterError("迭代失败：函数或导数数值不稳定");
+              const dir = raw - xn;
+              let step = isFinite(lambda) && lambda > 0 ? lambda : 1;
+              let tries = 0;
+              let accepted = false;
+              let candVal = xn;
+              while (tries < 20) {
+                const cand = xn + step * dir;
+                const sm = stableMove(xn, cand);
+                if (!sm.ok) {
+                  step *= 0.5;
+                  tries++;
+                  continue;
+                }
+                const fnew = evalFx(sm.value);
+                if (isFinite(fnew) && Math.abs(fnew) < Math.abs(fx)) {
+                  candVal = sm.value;
+                  accepted = true;
+                  break;
+                }
+                step *= 0.5;
+                tries++;
+              }
+              if (!accepted) {
+                setIterError("迭代失败：下山条件无法满足");
                 return next;
               }
-              xnp1 = sm.value;
+              xnp1 = candVal;
             }
             const fxn = fx;
             pushShape({
@@ -531,7 +575,7 @@ export default function RealRootView({ theme }: { theme: "light" | "dark" }) {
               const s3 = phi(s2);
               const denom = s3 - 2 * s2 + s1;
               if (!isFinite(denom) || Math.abs(denom) < 1e-14) {
-                setIterError("迭代失败：艾特肯加速分母过小");
+                setIterError("迭代失败：埃特肯加速分母过小");
                 return next;
               }
               xnp1 = s1 - ((s2 - s1) * (s2 - s1)) / denom;
@@ -938,7 +982,7 @@ export default function RealRootView({ theme }: { theme: "light" | "dark" }) {
             className={`w-full ${inputClass}`}
           >
             <option value="picard">基础迭代法</option>
-            <option value="aitken">艾特肯加速法</option>
+            <option value="aitken">埃特肯加速法</option>
             <option value="regula">单点弦截法</option>
             <option value="secant">双点弦截法</option>
             <option value="newton">牛顿法</option>
@@ -948,7 +992,7 @@ export default function RealRootView({ theme }: { theme: "light" | "dark" }) {
         </div>
         {method === "newton-damped" && (
           <div>
-            <label className="block text-sm mb-1">λ</label>
+            <label className="block text-sm mb-1">初始下山步长（可选）</label>
             <input
               type="text"
               value={"" + lambda}
@@ -1116,7 +1160,7 @@ export default function RealRootView({ theme }: { theme: "light" | "dark" }) {
               theme === "dark" ? "text-gray-300" : "text-gray-600"
             }`}
           >
-              误差-步
+            误差-步
           </div>
         </div>
         <div className="absolute bottom-3 right-3 flex gap-2">
